@@ -9,42 +9,27 @@ pipeline {
         stage('Build jar') {
             steps {
                 sh 'mvn package'
-            }
         }
+    }
+}
 
-        stage('Test') {
-            steps {
-                script {
-                    echo "Testing the application..."
-                    echo "Executing pipeline for branch ${BRANCH_NAME}"
+    stage('Build Image') {
+        steps {
+            script {
+                echo "Building the Docker image..."
+                withCredentials([username Password(credentialsId: 'docker-hub-credential', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                    sh 'docker build -t azeshion21/demo-app:jmp-2.0.'    
+                    sh "echo \$PASS | docker login -u \$USER--password-stdin"
+                    sh 'docker push azeshion21/demo-app:jmp-2.0'
                 }
             }
         }
+    }
 
-        stage('Build Image') {
-            when {
-                expression { BRANCH_NAME == 'main' }
-            }
-            steps {
-                script {
-                    echo "Building the Docker image..."
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credential', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh 'docker build -t ahmdfhri/demo-app:jma-2.0 .'
-                        sh "echo \$PASS | docker login -u \$USER --password-stdin"
-                        sh 'docker push ahmdfhri/demo-app:jma-2.0'
-                    }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                expression { BRANCH_NAME == 'main' }
-            }
-            steps {
-                script {
-                    echo "Deploying the application..."
-                }
+    stage('Deploy') {
+        steps {
+            script {
+                echo "Deploying the application..."
             }
         }
     }
