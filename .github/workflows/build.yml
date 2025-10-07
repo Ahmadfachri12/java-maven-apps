@@ -1,0 +1,30 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Run Build
+        run: echo "🚀 Build process running..."
+
+      - name: Notify Discord (Success/Failure)
+        if: always() # akan kirim meskipun gagal
+        uses: Ilshidur/action-discord@v2
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          args: |
+            📢 **Build Notification**
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Status: ${{ job.status }}
+            Commit: ${{ github.sha }}
+            Actor: ${{ github.actor }}

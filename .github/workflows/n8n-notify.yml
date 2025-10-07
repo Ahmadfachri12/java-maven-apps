@@ -1,0 +1,40 @@
+name: Send Build Status to n8n
+
+# Pemicu: Workflow ini berjalan setiap kali ada 'push'
+on:
+  push:
+    branches: [ main ] # Anda bisa ganti dengan nama branch Anda
+
+jobs:
+  build-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      # Langkah 1: Contoh langkah build, bisa diganti dengan build sungguhan
+      - name: A simple build step
+        run: echo "Ini adalah langkah build, testing, atau deploy Anda."
+
+      # Langkah 2: Kirim status SUKSES jika semua langkah di atas berhasil
+      - name: Send Success Status to n8n
+        if: success()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{
+                "project": "${{ github.repository }}",
+                "status": "SUCCESS",
+                "branch": "${{ github.ref_name }}",
+                "commit_url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+              }' \
+          ${{ secrets.N8N_WEBHOOK_URL }}
+
+      # Langkah 3: Kirim status GAGAL jika ada langkah yang gagal
+      - name: Send Failure Status to n8n
+        if: failure()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{
+                "project": "${{ github.repository }}",
+                "status": "FAILURE",
+                "branch": "${{ github.ref_name }}",
+                "commit_url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+              }' \
+          ${{ secrets.N8N_WEBHOOK_URL }}
